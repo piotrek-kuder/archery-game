@@ -11,6 +11,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -19,6 +20,8 @@ import javafx.stage.StageStyle;
 public class ArcherGame extends Application {
 
     Images images = new Images();
+    ShootTo shoot = new ShootTo();
+    SetAngle setAngle = new SetAngle();
 
     public static void main(String[] args) {
         launch(args);
@@ -62,6 +65,9 @@ public class ArcherGame extends Application {
         angleSlider.setShowTickLabels(true);
         angleSlider.setSnapToTicks(false);
         angleSlider.setMaxSize(100, 50);
+        //angleSlider.setOnMouseDragged(event -> System.out.println("angleSlider move" + angleSlider.getValue()));
+        //angleSlider.setOnMouseDragged(event -> setAngle.setAngle(images.getBowView(), angleSlider.getValue()));
+        angleSlider.setOnMouseReleased(event -> setAngle.setAngle(images.getBowView(), angleSlider.getValue()));
 
         //labels for sliders
         Label massLabel = new Label("Arrow mass");
@@ -85,6 +91,9 @@ public class ArcherGame extends Application {
         buttonStart.setMaxSize(110, 40);
         images.getFlameView().setFitWidth(30);
         images.getFlameView().setPreserveRatio(true);
+        buttonStart.setOnAction( e -> {
+            shoot.shootTo(massSlider.getValue(), powerSlider.getValue(), angleSlider.getValue(), images.getArrowView());
+        });
 
         //vbox for sliders, labels and button
         VBox controlBox = new VBox();
@@ -132,12 +141,14 @@ public class ArcherGame extends Application {
         images.getArrowView().setY(450);
         group.getChildren().add(images.getArrowView());
 
+        Circle circle = new Circle(370, 200, 3, Color.RED);
+
         //root node for scene
         AnchorPane gameArea = new AnchorPane();
         gameArea.setBackground(images.getBackground());
         AnchorPane.setTopAnchor(controlBox, 15.0);
         AnchorPane.setRightAnchor(controlBox, 15.0);
-        gameArea.getChildren().addAll(controlBox, group);
+        gameArea.getChildren().addAll(controlBox, group, circle);
 
         //scene creating with root node, width, height
         Scene scene = new Scene(gameArea);
