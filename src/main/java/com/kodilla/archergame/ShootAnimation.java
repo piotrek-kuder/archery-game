@@ -1,12 +1,13 @@
 package com.kodilla.archergame;
 
-import javafx.animation.*;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PathTransition;
+import javafx.animation.RotateTransition;
 import javafx.scene.image.ImageView;
-import javafx.scene.shape.*;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.shape.QuadCurveTo;
 import javafx.util.Duration;
-
-import java.awt.*;
-import java.util.concurrent.TimeUnit;
 
 public class ShootAnimation {
     public void shootTo(double controlX, double controlY, double x, double y, double angle, ImageView arrow) {
@@ -16,7 +17,6 @@ public class ShootAnimation {
 
         Path path = new Path();
         path.getElements().add(new MoveTo(665,440 - angle));
-        //path.getElements().add(new QuadCurveTo(400, 200, 20, 450));
         path.getElements().add(new QuadCurveTo(controlX, controlY, x, y));
 
         PathTransition pathTransition = new PathTransition();
@@ -25,10 +25,8 @@ public class ShootAnimation {
         pathTransition.setNode(arrow);
 
         RotateTransition rotateTransition = new RotateTransition(Duration.millis(800), arrow);
-        //System.out.println(arrow.getRotate() + " 1: " + rotateTransition.getFromAngle() + " : " + rotateTransition.getToAngle());
         rotateTransition.setFromAngle(angle);
         rotateTransition.setToAngle(-1 * angle);
-        //System.out.println(arrow.getRotate() + " 2: " + rotateTransition.getFromAngle() + " : " + rotateTransition.getToAngle());
 
         ParallelTransition parallelTransition = new ParallelTransition();
         parallelTransition.getChildren().addAll(pathTransition, rotateTransition);

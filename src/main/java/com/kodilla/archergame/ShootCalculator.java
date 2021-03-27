@@ -14,11 +14,6 @@ public class ShootCalculator {
 
     public void calculateCurve(double mass, double power, double angle, int windSpeed) {
 
-        /*mass = 10;
-        angle = 45;
-        power = 30;
-        windSpeed = 10;*/
-
         double angleInRadians = Math.toRadians(angle);
         double f = 9.82 * power;  // shoot power
         double s = 0.5;        //dlugosc naciagu luku
@@ -28,26 +23,20 @@ public class ShootCalculator {
 
 
         while (y >= 0) {
-            //System.out.println("x1  " + x + "  :::::   y1  " + y);
             xFinal = x;
             yFinal = y;
             y = 2.5 * (x * Math.tan(angleInRadians) - ((9.81 * Math.pow(x, 2))/(2 * Math.pow(((vStart + .6 * windSpeed) * Math.cos(angleInRadians)), 2))));
             x++;
-            //System.out.println("x2  " + x + "  :::::   y2  " + y);
         }
 
         controlX = xFinal/2;
         controlY = 2.5 * (controlX * Math.tan(angleInRadians) - ((9.81 * Math.pow(controlX, 2))/(2 * Math.pow(((vStart + .6 * windSpeed) * Math.cos(angleInRadians)), 2))));
         yArrow = 2.5 * (xArrowPosition * Math.tan(angleInRadians) - ((9.81 * Math.pow(xArrowPosition, 2))/(2 * Math.pow(((vStart + .6 * windSpeed) * Math.cos(angleInRadians)), 2))));
         yArrowPosition = 440 - yArrow;
-
-        //System.out.println("xF:  " + xFinal + "  yF: " + yFinal + " \nxC: " + controlX + "  yC: " + controlY
-        //+ "\nxB: " + xBorder + "  yB: " + yBorder);
     }
 
     public boolean checkHit(ImageView shield) {
 
-        //System.out.println(" shield y  " + shield.getY());
         System.out.println("\nyArrowPosition  " + yArrowPosition);
 
         double shieldBeginPosition = shield.getY();
@@ -69,7 +58,7 @@ public class ShootCalculator {
 
     public double getXFinal() {
         if(665 - xFinal < 0) {
-            return 0;
+            return 50;
         }
         return 665 - xFinal;
     }

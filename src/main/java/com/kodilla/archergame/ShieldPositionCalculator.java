@@ -10,11 +10,9 @@ public class ShieldPositionCalculator {
 
     public void placeShield(ImageView shield) {
 
-        int shieldPosition = randomGenerator.nextInt(430);
+        int shieldPosition = randomGenerator.nextInt(400);
 
-        shield.setY(shieldPosition);
-
-        //System.out.println("random shield y:  " + shieldPosition);
+        shield.setY(shieldPosition + 30);
     }
 
 }

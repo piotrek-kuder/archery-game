@@ -113,7 +113,7 @@ public class ArcherGame extends Application {
         buttonShoot.setOnAction(e -> {
             takeShoot(massSlider.getValue(), powerSlider.getValue(), angleSlider.getValue(), setWind.getWindSpeed());
             shootCalculator.checkHit(images.getShieldView());
-            System.out.println("score :  " + shootCalculator.checkHit(images.getShieldView()));
+            System.out.println("good shot :  " + shootCalculator.checkHit(images.getShieldView()));
         });
 
         //start game button
@@ -125,8 +125,6 @@ public class ArcherGame extends Application {
         buttonStart.setOnAction(event -> {
             //prepare game area: shield position and wind power and direction
             prepareGameplay(chancesLabel, windPowerLabel, buttonStart, buttonShoot);
-            //System.out.println("prepare area");
-            //System.out.println("y" + images.getShieldView().getY());
         });
 
         //test purpose only
