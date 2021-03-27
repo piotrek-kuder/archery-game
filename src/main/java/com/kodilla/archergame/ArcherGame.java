@@ -8,10 +8,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -20,8 +20,11 @@ import javafx.stage.StageStyle;
 public class ArcherGame extends Application {
 
     Images images = new Images();
-    ShootTo shoot = new ShootTo();
-    SetAngle setAngle = new SetAngle();
+    ShootAnimation shootAnimation = new ShootAnimation();
+    BowAngleSetter setAngle = new BowAngleSetter();
+    ShieldPositionCalculator placeShield = new ShieldPositionCalculator();
+    WindSettingsCalculator setWind = new WindSettingsCalculator();
+    ShootCalculator shootCalculator = new ShootCalculator();
 
     public static void main(String[] args) {
         launch(args);
@@ -30,16 +33,10 @@ public class ArcherGame extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        // title - main window
-        primaryStage.setTitle("JavaFX archery");
-
-        //set style decoration: DECORATED UNDECORATED TRANSPARENT UNIFIED UTILITY
-        primaryStage.initStyle(StageStyle.DECORATED);
-
-        //stage width and height and resizable
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
-        primaryStage.setResizable(false);
+        final int WINDOW_WIDTH = 800;
+        final int WINDOW_HEIGHT = 600;
+        int shotsLeft = 0;
+        int goodShots = 0;
 
         //sliders
         Slider massSlider = new Slider(10, 30, 10);
@@ -50,7 +47,7 @@ public class ArcherGame extends Application {
         massSlider.setSnapToTicks(false);
         massSlider.setMaxSize(100, 50);
 
-        Slider powerSlider = new Slider(5, 45, 3);
+        Slider powerSlider = new Slider(5, 30, 5);
         powerSlider.setMajorTickUnit(5);
         powerSlider.setMinorTickCount(4);
         powerSlider.setShowTickMarks(true);
@@ -59,17 +56,17 @@ public class ArcherGame extends Application {
         powerSlider.setMaxSize(100, 50);
 
         Slider angleSlider = new Slider(5, 85, 5);
-        angleSlider.setMajorTickUnit(15);
-        angleSlider.setMinorTickCount(4);
+        angleSlider.setMajorTickUnit(25);
         angleSlider.setShowTickMarks(true);
         angleSlider.setShowTickLabels(true);
         angleSlider.setSnapToTicks(false);
         angleSlider.setMaxSize(100, 50);
-        //angleSlider.setOnMouseDragged(event -> System.out.println("angleSlider move" + angleSlider.getValue()));
-        //angleSlider.setOnMouseDragged(event -> setAngle.setAngle(images.getBowView(), angleSlider.getValue()));
-        angleSlider.setOnMouseReleased(event -> setAngle.setAngle(images.getBowView(), angleSlider.getValue()));
+        angleSlider.setOnMouseReleased(event -> {
+            shootAnimation.initialPosition(images.getArrowView());
+            setAngle.setAngle(images.getBowView(), images.getArrowView(), angleSlider.getValue());
+        });
 
-        //labels for sliders
+        //labels for sliders, wind info, shots left
         Label massLabel = new Label("Arrow mass");
         massLabel.setFont(Font.font(18));
         massLabel.setTextFill(Color.BLACK);
@@ -84,15 +81,64 @@ public class ArcherGame extends Application {
         angleLabel.setFont(Font.font(18));
         angleLabel.setTextFill(Color.BLACK);
         angleLabel.setTextAlignment(TextAlignment.CENTER);
+////////////////////////////////////////////////////////////////////////////////////////////////
+        Label windPowerLabel = new Label("Wind speed: " + 0);
+        windPowerLabel.setFont(Font.font(16));
+        windPowerLabel.setTextFill(Color.BLACK);
+        windPowerLabel.setTextAlignment(TextAlignment.CENTER);
+        windPowerLabel.setWrapText(true);
 
-        //start button
-        Button buttonStart = new Button("GO!", images.getFlameView());
-        buttonStart.setFont(Font.font(20));
-        buttonStart.setMaxSize(110, 40);
+        Label windDirectionLabel = new Label("Wind direction");
+        windDirectionLabel.setFont(Font.font(16));
+        windDirectionLabel.setTextFill(Color.BLACK);
+        windDirectionLabel.setTextAlignment(TextAlignment.CENTER);
+        windPowerLabel.setWrapText(true);
+
+        Label chancesLabel = new Label("Chances: 0");
+        chancesLabel.setFont(Font.font(16));
+        chancesLabel.setTextFill(Color.BLACK);
+        chancesLabel.setTextAlignment(TextAlignment.CENTER);
+        windPowerLabel.setWrapText(true);
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+        //shoot arrow button
+        Button buttonShoot = new Button("GO!", images.getFlameView());
+        buttonShoot.setFont(Font.font(20));
+        buttonShoot.setMaxSize(110, 40);
+        buttonShoot.setVisible(false);
         images.getFlameView().setFitWidth(30);
         images.getFlameView().setPreserveRatio(true);
-        buttonStart.setOnAction( e -> {
-            shoot.shootTo(massSlider.getValue(), powerSlider.getValue(), angleSlider.getValue(), images.getArrowView());
+        buttonShoot.setOnAction(e -> {
+            takeShoot(massSlider.getValue(), powerSlider.getValue(), angleSlider.getValue(), setWind.getWindSpeed());
+            shootCalculator.checkHit(images.getShieldView());
+            System.out.println("score :  " + shootCalculator.checkHit(images.getShieldView()));
+        });
+
+        //start game button
+        Button buttonStart = new Button("NEW GAME");
+        buttonStart.setFont(Font.font(18));
+        buttonStart.setMaxSize(230, 50);
+        buttonStart.setLayoutX(250);
+        buttonStart.setLayoutY(350);
+        buttonStart.setOnAction(event -> {
+            //prepare game area: shield position and wind power and direction
+            prepareGameplay(chancesLabel, windPowerLabel, buttonStart, buttonShoot);
+            //System.out.println("prepare area");
+            //System.out.println("y" + images.getShieldView().getY());
+        });
+
+        //test purpose only
+        Button testButton = new Button("shield");
+        testButton.setMaxSize(50, 50);
+        testButton.setVisible(false);
+        testButton.setOnAction(event -> {
+            System.out.println("atrrrrr");
+            shootCalculator.calculateCurve(massSlider.getValue(),
+                    powerSlider.getValue(),
+                    angleSlider.getValue(),
+                    setWind.getWindSpeed());
         });
 
         //vbox for sliders, labels and button
@@ -113,15 +159,30 @@ public class ArcherGame extends Application {
         controlBox.getChildren().add(angleSlider);
         VBox.setMargin(angleSlider, new Insets(0, 10, 10,10));
 
-        controlBox.getChildren().add(buttonStart);
+        controlBox.getChildren().add(buttonShoot);
+        controlBox.getChildren().add(testButton);
 
-        //group: shield, bow, archer, arrow
+        //hbox for wind and chances
+        HBox infoBox = new HBox();
+        infoBox.setMaxSize(600, 100);
+        infoBox.setSpacing(20);
+        infoBox.setAlignment(Pos.CENTER);
+        infoBox.getChildren().addAll(chancesLabel, windPowerLabel, windDirectionLabel, images.getWindArrow());
+
+        //group: shield, bow, archer, arrow, wind direction arrow
         Group group = new Group();
+
         images.getShieldView().setFitWidth(35);
-        images.getShieldView().setFitHeight(150);
+        images.getShieldView().setFitHeight(160);
         images.getShieldView().setX(5);
         images.getShieldView().setY(350);
         group.getChildren().add(images.getShieldView());
+
+        images.getArrowView().setFitWidth(100);
+        images.getArrowView().setPreserveRatio(true);
+        images.getArrowView().setX(615);
+        images.getArrowView().setY(440);
+        group.getChildren().add(images.getArrowView());
 
         images.getArcherView().setFitHeight(200);
         images.getArcherView().setPreserveRatio(true);
@@ -135,31 +196,67 @@ public class ArcherGame extends Application {
         images.getBowView().setY(370);
         group.getChildren().add(images.getBowView());
 
-        images.getArrowView().setFitWidth(100);
-        images.getArrowView().setPreserveRatio(true);
-        images.getArrowView().setX(540);
-        images.getArrowView().setY(450);
-        group.getChildren().add(images.getArrowView());
+        images.getWindArrow().setFitHeight(40);
+        images.getWindArrow().setFitWidth(60);
+        images.getWindArrow().setX(400);
+        images.getWindArrow().setY(10);
 
-        Circle circle = new Circle(370, 200, 3, Color.RED);
+        Circle circle = new Circle(615, 440, 3, Color.RED);
+        Rectangle rectangleYellow = new Rectangle(50, 0, 500, 60);
+        rectangleYellow.setFill(Color.YELLOW);
+        rectangleYellow.setViewOrder(1);
 
         //root node for scene
-        AnchorPane gameArea = new AnchorPane();
-        gameArea.setBackground(images.getBackground());
+        AnchorPane anchorPaneGameArea = new AnchorPane();
+        anchorPaneGameArea.setBackground(images.getBackground());
         AnchorPane.setTopAnchor(controlBox, 15.0);
         AnchorPane.setRightAnchor(controlBox, 15.0);
-        gameArea.getChildren().addAll(controlBox, group, circle);
+        AnchorPane.setLeftAnchor(infoBox, 55.0);
+        AnchorPane.setTopAnchor(infoBox, 10.0);
+        anchorPaneGameArea.getChildren().addAll(controlBox, infoBox, group, circle, rectangleYellow, buttonStart);
 
         //scene creating with root node, width, height
-        Scene scene = new Scene(gameArea);
+        Scene scene = new Scene(anchorPaneGameArea);
         scene.setFill(Color.WHEAT);
         scene.setCursor(images.getCursor());
+
+        //main window properties
+        primaryStage.setTitle("JavaFX archery");
+        primaryStage.initStyle(StageStyle.DECORATED);
+        primaryStage.setWidth(WINDOW_WIDTH);
+        primaryStage.setHeight(WINDOW_HEIGHT);
+        primaryStage.setResizable(false);
 
         //adding scene to stage
         primaryStage.setScene(scene);
 
         //showing stage in window
         primaryStage.show();
+    }
+
+    public void prepareGameplay(Label chancesLabel, Label windPowerLabel, Button buttonStart,
+                                Button buttonShoot) {
+
+        placeShield.placeShield(images.getShieldView());
+        setWind.setWindDirection(images.getWindArrow());
+        setWind.setWindSpeed();
+        chancesLabel.setText("Chances: 3");
+        windPowerLabel.setText("Wind speed: " + setWind.getWindSpeedForLabel());
+        buttonStart.setVisible(false);
+        buttonShoot.setVisible(true);
+
+    }
+
+    public void takeShoot(double mass, double power, double angle, int windSpeed) {
+
+        setAngle.setAngle(images.getBowView(), images.getArrowView(), angle);
+        shootCalculator.calculateCurve(mass, power, angle, windSpeed);
+        shootAnimation.shootTo(shootCalculator.getControlX(),
+                shootCalculator.getControlY(),
+                shootCalculator.getXFinal(),
+                shootCalculator.getYFinal(),
+                angle,
+                images.getArrowView());
 
     }
 }

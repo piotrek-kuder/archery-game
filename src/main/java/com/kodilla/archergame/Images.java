@@ -10,6 +10,9 @@ public class Images {
     //cursor
     private ImageCursor cursor = new ImageCursor(new Image("file:src/main/resources/cursor.png"));
 
+    //wind direction
+    private ImageView windArrow = new ImageView(new Image("file:src/main/resources/wind_direction.png"));
+
     //game objects
     private ImageView flameView = new ImageView(new Image("file:src/main/resources/flame.png"));
     private ImageView bowView = new ImageView(new Image("file:src/main/resources/bow.png"));
@@ -64,5 +67,9 @@ public class Images {
 
     public ImageView getArrowView() {
         return arrowView;
+    }
+
+    public ImageView getWindArrow() {
+        return windArrow;
     }
 }
