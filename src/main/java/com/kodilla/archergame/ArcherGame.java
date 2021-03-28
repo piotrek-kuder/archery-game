@@ -276,6 +276,7 @@ public class ArcherGame extends Application {
        summaryStage.setResizable(false);
        summaryStage.initStyle(StageStyle.TRANSPARENT);
        summaryStage.initModality(Modality.APPLICATION_MODAL);
+       summaryStage.initOwner(primaryStage);
        summaryStage.setAlwaysOnTop(true);
        summaryStage.setTitle("Play finished");
        summaryStage.setWidth(250);
