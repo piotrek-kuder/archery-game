@@ -5,8 +5,6 @@ import javafx.scene.transform.Rotate;
 
 public class BowAngleSetter {
 
-
-
     public void setAngle(ImageView bow, ImageView arrow, double angle) {
 
         arrow.getTransforms().remove(0, arrow.getTransforms().size());

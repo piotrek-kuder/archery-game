@@ -31,7 +31,6 @@ public class ShootAnimation {
         ParallelTransition parallelTransition = new ParallelTransition();
         parallelTransition.getChildren().addAll(pathTransition, rotateTransition);
         parallelTransition.play();
-       // parallelTransition.setOnFinished(event -> System.out.println("arrow y position" + + arrow.getTranslateY()));
     }
 
     public void initialPosition(ImageView arrow) {

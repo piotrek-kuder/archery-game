@@ -8,12 +8,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -25,6 +28,7 @@ public class ArcherGame extends Application {
     ShieldPositionCalculator placeShield = new ShieldPositionCalculator();
     WindSettingsCalculator setWind = new WindSettingsCalculator();
     ShootCalculator shootCalculator = new ShootCalculator();
+    ScoreChecker scoreChecker = new ScoreChecker();
 
     public static void main(String[] args) {
         launch(args);
@@ -35,8 +39,6 @@ public class ArcherGame extends Application {
 
         final int WINDOW_WIDTH = 800;
         final int WINDOW_HEIGHT = 600;
-        int shotsLeft = 0;
-        int goodShots = 0;
 
         //sliders
         Slider massSlider = new Slider(10, 30, 10);
@@ -81,7 +83,7 @@ public class ArcherGame extends Application {
         angleLabel.setFont(Font.font(18));
         angleLabel.setTextFill(Color.BLACK);
         angleLabel.setTextAlignment(TextAlignment.CENTER);
-////////////////////////////////////////////////////////////////////////////////////////////////
+
         Label windPowerLabel = new Label("Wind speed: " + 0);
         windPowerLabel.setFont(Font.font(16));
         windPowerLabel.setTextFill(Color.BLACK);
@@ -99,9 +101,13 @@ public class ArcherGame extends Application {
         chancesLabel.setTextFill(Color.BLACK);
         chancesLabel.setTextAlignment(TextAlignment.CENTER);
         windPowerLabel.setWrapText(true);
-////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+        //start game button
+        Button buttonStart = new Button("NEW GAME");
+        buttonStart.setFont(Font.font(22));
+        buttonStart.setPrefSize(230, 50);
+        buttonStart.setLayoutX(250);
+        buttonStart.setLayoutY(300);
 
         //shoot arrow button
         Button buttonShoot = new Button("GO!", images.getFlameView());
@@ -110,33 +116,17 @@ public class ArcherGame extends Application {
         buttonShoot.setVisible(false);
         images.getFlameView().setFitWidth(30);
         images.getFlameView().setPreserveRatio(true);
+
+        //actions for buttons
         buttonShoot.setOnAction(e -> {
             takeShoot(massSlider.getValue(), powerSlider.getValue(), angleSlider.getValue(), setWind.getWindSpeed());
-            shootCalculator.checkHit(images.getShieldView());
-            System.out.println("good shot :  " + shootCalculator.checkHit(images.getShieldView()));
+            checkResult(buttonShoot, buttonStart, primaryStage, chancesLabel);
+            System.out.println("aimed shot :  " + shootCalculator.checkHit(images.getShieldView()));
         });
 
-        //start game button
-        Button buttonStart = new Button("NEW GAME");
-        buttonStart.setFont(Font.font(18));
-        buttonStart.setMaxSize(230, 50);
-        buttonStart.setLayoutX(250);
-        buttonStart.setLayoutY(350);
         buttonStart.setOnAction(event -> {
             //prepare game area: shield position and wind power and direction
-            prepareGameplay(chancesLabel, windPowerLabel, buttonStart, buttonShoot);
-        });
-
-        //test purpose only
-        Button testButton = new Button("shield");
-        testButton.setMaxSize(50, 50);
-        testButton.setVisible(false);
-        testButton.setOnAction(event -> {
-            System.out.println("atrrrrr");
-            shootCalculator.calculateCurve(massSlider.getValue(),
-                    powerSlider.getValue(),
-                    angleSlider.getValue(),
-                    setWind.getWindSpeed());
+            prepareGameplay(chancesLabel, windPowerLabel, buttonStart, buttonShoot, scoreChecker);
         });
 
         //vbox for sliders, labels and button
@@ -158,9 +148,8 @@ public class ArcherGame extends Application {
         VBox.setMargin(angleSlider, new Insets(0, 10, 10,10));
 
         controlBox.getChildren().add(buttonShoot);
-        controlBox.getChildren().add(testButton);
 
-        //hbox for wind and chances
+        //HBox for wind and chances
         HBox infoBox = new HBox();
         infoBox.setMaxSize(600, 100);
         infoBox.setSpacing(20);
@@ -199,7 +188,6 @@ public class ArcherGame extends Application {
         images.getWindArrow().setX(400);
         images.getWindArrow().setY(10);
 
-        Circle circle = new Circle(615, 440, 3, Color.RED);
         Rectangle rectangleYellow = new Rectangle(50, 0, 500, 60);
         rectangleYellow.setFill(Color.YELLOW);
         rectangleYellow.setViewOrder(1);
@@ -211,7 +199,7 @@ public class ArcherGame extends Application {
         AnchorPane.setRightAnchor(controlBox, 15.0);
         AnchorPane.setLeftAnchor(infoBox, 55.0);
         AnchorPane.setTopAnchor(infoBox, 10.0);
-        anchorPaneGameArea.getChildren().addAll(controlBox, infoBox, group, circle, rectangleYellow, buttonStart);
+        anchorPaneGameArea.getChildren().addAll(controlBox, infoBox, group, rectangleYellow, buttonStart);
 
         //scene creating with root node, width, height
         Scene scene = new Scene(anchorPaneGameArea);
@@ -224,6 +212,7 @@ public class ArcherGame extends Application {
         primaryStage.setWidth(WINDOW_WIDTH);
         primaryStage.setHeight(WINDOW_HEIGHT);
         primaryStage.setResizable(false);
+        primaryStage.setAlwaysOnTop(false);
 
         //adding scene to stage
         primaryStage.setScene(scene);
@@ -233,12 +222,14 @@ public class ArcherGame extends Application {
     }
 
     public void prepareGameplay(Label chancesLabel, Label windPowerLabel, Button buttonStart,
-                                Button buttonShoot) {
+                                Button buttonShoot, ScoreChecker scoreChecker) {
 
         placeShield.placeShield(images.getShieldView());
         setWind.setWindDirection(images.getWindArrow());
         setWind.setWindSpeed();
-        chancesLabel.setText("Chances: 3");
+        scoreChecker.setChances(3);
+        scoreChecker.setScore(0);
+        chancesLabel.setText("Chances:  " + scoreChecker.getChances());
         windPowerLabel.setText("Wind speed: " + setWind.getWindSpeedForLabel());
         buttonStart.setVisible(false);
         buttonShoot.setVisible(true);
@@ -256,5 +247,61 @@ public class ArcherGame extends Application {
                 angle,
                 images.getArrowView());
 
+    }
+
+    public void checkResult(Button buttonShoot, Button buttonStart, Stage primaryStage, Label chancesLabel) {
+
+       int result = scoreChecker.checkScore(shootCalculator.checkHit(images.getShieldView()));
+
+       chancesLabel.setText("Chances:  " + scoreChecker.getChances());
+
+       Text summaryText = new Text();
+       summaryText.setFont(Font.font(22));
+       summaryText.setTextAlignment(TextAlignment.CENTER);
+
+       Button exitButton = new Button("Exit game");
+       exitButton.setPrefSize(200, 100);
+       exitButton.setFont(Font.font(20));
+
+       Button playAgainButton = new Button("Play again");
+       playAgainButton.setPrefSize(200, 100);
+       playAgainButton.setFont(Font.font(20));
+
+       VBox summaryVBox = new VBox();
+       summaryVBox.setAlignment(Pos.CENTER);
+
+       Scene summaryScene = new Scene(summaryVBox, 300, 350, Color.CORNFLOWERBLUE);
+       Stage summaryStage = new Stage();
+
+       summaryStage.setResizable(false);
+       summaryStage.initStyle(StageStyle.TRANSPARENT);
+       summaryStage.initModality(Modality.APPLICATION_MODAL);
+       summaryStage.setAlwaysOnTop(true);
+       summaryStage.setTitle("Play finished");
+       summaryStage.setWidth(250);
+       summaryStage.setHeight(300);
+
+       summaryVBox.getChildren().addAll(summaryText, playAgainButton, exitButton);
+       summaryStage.setScene(summaryScene);
+
+       exitButton.setOnAction(event -> {
+            summaryStage.close();
+            primaryStage.close();
+       });
+
+       playAgainButton.setOnAction(event -> {
+            buttonStart.setVisible(true);
+            summaryStage.close();
+       });
+
+       if(result == 1 && scoreChecker.getScore() > 0) {
+           buttonShoot.setVisible(false);
+           summaryStage.show();
+           summaryText.setText("\nWinner!!!\n");
+       } else if (result == 1 && scoreChecker.getScore() <= 0){
+           buttonShoot.setVisible(false);
+           summaryStage.show();
+           summaryText.setText("\n  You had no luck...\n");
+       }
     }
 }

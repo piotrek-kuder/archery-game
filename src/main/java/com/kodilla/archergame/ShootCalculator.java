@@ -9,7 +9,7 @@ public class ShootCalculator {
     private double xFinal = 0;
     private double yFinal = 0;
     private double yArrow;
-    private double xArrowPosition = 665;
+    private final double xArrowPosition = 665;
     private double yArrowPosition = 0;
 
     public void calculateCurve(double mass, double power, double angle, int windSpeed) {
@@ -20,7 +20,6 @@ public class ShootCalculator {
         double vStart = Math.sqrt((f * s)/(mass * .001));
         double x = 0;
         double y = 0;
-
 
         while (y >= 0) {
             xFinal = x;
@@ -44,8 +43,7 @@ public class ShootCalculator {
 
         System.out.println(" shield begin:  " + shieldBeginPosition + "  shield end:  " + shieldEndPosition);
 
-            return yArrowPosition > shieldBeginPosition && yArrowPosition < shieldEndPosition;
-
+        return yArrowPosition > shieldBeginPosition && yArrowPosition < shieldEndPosition;
     }
 
     public double getControlX() {
@@ -57,17 +55,23 @@ public class ShootCalculator {
     }
 
     public double getXFinal() {
-        if(665 - xFinal < 0) {
+        if(655 - xFinal < 0) {
             return 50;
         }
-        return 665 - xFinal;
+        return 655 - xFinal;
     }
 
     public double getYFinal() {
         if(665 - xFinal < 0) {
-            return yArrowPosition;
+            //System.out.println("ret 1  " + (yArrowPosition - 20));
+            return yArrowPosition - 25;
         }
-        return 440 - yFinal;
+        if(yFinal > 0) {
+            //System.out.println("ret 2  " + yArrowPosition);
+            return 430 - yFinal;
+        } else {
+            //System.out.println("ret 3  " + yArrowPosition);
+            return 430 + yFinal;
+        }
     }
-
 }
